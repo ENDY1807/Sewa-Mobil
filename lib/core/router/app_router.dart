@@ -4,7 +4,9 @@ import '../../features/admin/presentation/admin_dashboard_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
-import '../../features/booking/presentation/booking_history_screen.dart';
+import '../../features/booking/presentation/screens/booking_history_screen.dart';
+import '../../features/booking/presentation/screens/booking_receipt_screen.dart';
+import '../../features/booking/presentation/screens/booking_screen.dart';
 import '../../features/cars/presentation/screens/car_detail_screen.dart';
 import '../../features/cars/presentation/screens/catalog_screen.dart';
 import '../../features/favorites/presentation/screens/favorites_screen.dart';
@@ -13,7 +15,7 @@ import '../../features/profile/presentation/profile_screen.dart';
 import '../../shared/widgets/error_state.dart';
 import 'route_names.dart';
 
-/// Centralized application router with route definitions and error handling.
+/// Centralized application router with route definitions, parameter mapping, and error handling.
 class AppRouter {
   AppRouter._();
 
@@ -34,6 +36,20 @@ class AppRouter {
         builder: (context, state) {
           final carId = state.pathParameters['id'] ?? '';
           return CarDetailScreen(carId: carId);
+        },
+      ),
+      GoRoute(
+        path: '/booking/:id',
+        builder: (context, state) {
+          final carId = state.pathParameters['id'] ?? '';
+          return BookingScreen(carId: carId);
+        },
+      ),
+      GoRoute(
+        path: '/bookings/:id/receipt',
+        builder: (context, state) {
+          final bookingId = state.pathParameters['id'] ?? '';
+          return BookingReceiptScreen(bookingId: bookingId);
         },
       ),
       GoRoute(
