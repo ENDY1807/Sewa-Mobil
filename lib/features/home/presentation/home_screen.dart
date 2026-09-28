@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/config/env_config.dart';
+import '../../../core/config/supabase_config.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
 import '../../../core/constants/app_strings.dart';
-import '../../../core/config/supabase_config.dart';
-import '../../../core/config/env_config.dart';
 import '../../../core/router/route_names.dart';
 import '../../../core/theme/text_styles.dart';
-import '../../../shared/widgets/price_text.dart';
-import '../../../shared/widgets/status_badge.dart';
+import '../../../shared/widgets/car_card.dart';
+import '../../../shared/widgets/loading_skeleton.dart';
+import '../../cars/presentation/providers/car_providers.dart';
 
-/// Modern, clean Home Screen for CarRent (Phase 1 Baseline).
-class HomeScreen extends StatefulWidget {
+/// Modern, clean Home Screen for CarRent displaying live vehicle catalog from Supabase.
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedCategoryIndex = 0;
   final List<String> _categories = [
     'Semua',
@@ -34,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSupabaseReady = SupabaseConfig.isInitialized;
+    final featuredCarsAsync = ref.watch(featuredCarsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -90,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Backend / Supabase Status Banner (Phase 1 verification)
+            // Backend / Supabase Status Banner
             _buildConnectionBanner(isSupabaseReady, isDark),
             const SizedBox(height: AppSizes.p24),
 
@@ -122,38 +125,35 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: AppSizes.p12),
 
-            // Preview Featured Cards (Phase 1 sample items)
-            _buildFeaturedCard(
-              context: context,
-              brand: 'Toyota',
-              model: 'Innova Zenix 2.0 V HV',
-              type: 'MPV • Hybrid',
-              price: 750000,
-              seats: 7,
-              transmission: 'Otomatis',
-              isDark: isDark,
-            ),
-            const SizedBox(height: AppSizes.p16),
-            _buildFeaturedCard(
-              context: context,
-              brand: 'Honda',
-              model: 'CR-V 1.5 Turbo Prestige',
-              type: 'SUV • Bensin',
-              price: 850000,
-              seats: 7,
-              transmission: 'Otomatis',
-              isDark: isDark,
-            ),
-            const SizedBox(height: AppSizes.p16),
-            _buildFeaturedCard(
-              context: context,
-              brand: 'Hyundai',
-              model: 'Ioniq 5 Signature Long Range',
-              type: 'Electric • EV',
-              price: 1200000,
-              seats: 5,
-              transmission: 'Otomatis',
-              isDark: isDark,
+            // Live Featured Cars from Riverpod
+            featuredCarsAsync.when(
+              loading: () => Column(
+                children: List.generate(
+                  3,
+                  (index) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSizes.p16),
+                    child: LoadingSkeleton(
+                      height: 240,
+                      borderRadius: AppSizes.radiusLg,
+                    ),
+                  ),
+                ),
+              ),
+              error: (err, _) => Padding(
+                padding: const EdgeInsets.all(AppSizes.p24),
+                child: Text('Gagal memuat katalog: $err'),
+              ),
+              data: (cars) => Column(
+                children: cars.map((car) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSizes.p16),
+                    child: CarCard(
+                      car: car,
+                      onTap: () => context.push(AppRoutes.explore),
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
             const SizedBox(height: AppSizes.p32),
           ],
@@ -244,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 Text(
                   isReady
-                      ? 'Endpoint: ${EnvConfig.supabaseUrl}'
+                      ? 'Katalog Mobil & Database aktif: ${EnvConfig.supabaseUrl}'
                       : 'Periksa file .env untuk kredensial Supabase.',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: isDark ? Colors.white70 : AppColors.textSecondaryLight,
@@ -284,11 +284,15 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Expanded(
           child: TextField(
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search_rounded),
+            decoration: const InputDecoration(
+              prefixIcon: Icon(Icons.search_rounded),
               hintText: AppStrings.searchPlaceholder,
             ),
-            onSubmitted: (_) => context.push(AppRoutes.explore),
+            onSubmitted: (query) {
+              ref.read(carFilterParamsProvider.notifier).state =
+                  CarFilterParams(searchQuery: query);
+              context.push(AppRoutes.explore);
+            },
           ),
         ),
         const SizedBox(width: AppSizes.p12),
@@ -331,153 +335,22 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             selectedColor: AppColors.primary,
             labelStyle: AppTextStyles.labelSmall.copyWith(
-              color: isSelected ? Colors.white : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+              color: isSelected
+                  ? Colors.white
+                  : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: AppSizes.radiusFull,
               side: BorderSide(
-                color: isSelected ? AppColors.primary : (isDark ? AppColors.borderDark : AppColors.borderLight),
+                color: isSelected
+                    ? AppColors.primary
+                    : (isDark ? AppColors.borderDark : AppColors.borderLight),
               ),
             ),
           );
         },
       ),
-    );
-  }
-
-  Widget _buildFeaturedCard({
-    required BuildContext context,
-    required String brand,
-    required String model,
-    required String type,
-    required num price,
-    required int seats,
-    required String transmission,
-    required bool isDark,
-  }) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.p16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Card Header: Brand & Status Badge
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      brand.toUpperCase(),
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.accent,
-                        letterSpacing: 1.0,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      model,
-                      style: AppTextStyles.titleSmall,
-                    ),
-                  ],
-                ),
-                StatusBadge.available(),
-              ],
-            ),
-            const SizedBox(height: AppSizes.p12),
-
-            // Car Visual Area
-            Container(
-              height: 140,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight,
-                borderRadius: AppSizes.radiusMd,
-              ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Icon(
-                      Icons.directions_car_filled_rounded,
-                      size: 72,
-                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black45,
-                        borderRadius: AppSizes.radiusSm,
-                      ),
-                      child: Text(
-                        type,
-                        style: AppTextStyles.labelSmall.copyWith(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSizes.p16),
-
-            // Specs Row
-            Row(
-              children: [
-                _buildSpecIcon(Icons.airline_seat_recline_normal_rounded, '$seats Kursi', isDark),
-                const SizedBox(width: AppSizes.p16),
-                _buildSpecIcon(Icons.sync_alt_rounded, transmission, isDark),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.favorite_border_rounded, size: 20),
-                  onPressed: () {},
-                  tooltip: 'Favorit',
-                ),
-              ],
-            ),
-            const Divider(height: AppSizes.p24),
-
-            // Bottom Action: Price and Rent Now Button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                PriceText(
-                  amount: price,
-                  isDark: isDark,
-                ),
-                ElevatedButton(
-                  onPressed: () => context.push(AppRoutes.explore),
-                  child: const Text(AppStrings.rentNow),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSpecIcon(IconData icon, String label, bool isDark) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
-        ),
-        const SizedBox(width: AppSizes.p4),
-        Text(
-          label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-          ),
-        ),
-      ],
     );
   }
 }
