@@ -1,0 +1,65 @@
+name: CarRent CI/CD Build & Verification
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Test & Build Flutter App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Print Flutter & Dart Version
+        run: flutter --version
+
+      - name: Create .env from template
+        run: |
+          cp .env.example .env
+          sed -i 's|https://your-project.supabase.co|${{ secrets.SUPABASE_URL || "https://gexthzhezjbhrrvyrzmg.supabase.co" }}|g' .env
+          sed -i 's|your-supabase-anon-key|${{ secrets.SUPABASE_ANON_KEY || "sb_publishable__t0Detnnhg5JttX5Ub1mAg_FEjUvUtd" }}|g' .env
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Verify Code Analysis
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run Unit & Widget Tests
+        run: flutter test
+
+      - name: Build Web Application
+        run: flutter build web --release
+
+      - name: Build Android APK (Debug for Testing)
+        run: flutter build apk --debug
+
+      - name: Upload Web Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: carrent-web-build
+          path: build/web
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: carrent-android-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
