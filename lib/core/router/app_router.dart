@@ -7,7 +7,7 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/booking/presentation/booking_history_screen.dart';
 import '../../features/cars/presentation/screens/car_detail_screen.dart';
 import '../../features/cars/presentation/screens/catalog_screen.dart';
-import '../../features/favorites/presentation/favorites_screen.dart';
+import '../../features/favorites/presentation/screens/favorites_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../shared/widgets/error_state.dart';
