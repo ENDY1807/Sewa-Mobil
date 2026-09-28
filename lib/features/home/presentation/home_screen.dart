@@ -149,7 +149,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     padding: const EdgeInsets.only(bottom: AppSizes.p16),
                     child: CarCard(
                       car: car,
-                      onTap: () => context.push(AppRoutes.explore),
+                      onTap: () => context.push(AppRoutes.carDetailPath(car.id)),
                     ),
                   );
                 }).toList(),
