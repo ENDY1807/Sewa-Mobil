@@ -11,6 +11,7 @@ import '../../features/cars/presentation/screens/car_detail_screen.dart';
 import '../../features/cars/presentation/screens/catalog_screen.dart';
 import '../../features/favorites/presentation/screens/favorites_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/payment/presentation/screens/payment_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../shared/widgets/error_state.dart';
 import 'route_names.dart';
@@ -43,6 +44,13 @@ class AppRouter {
         builder: (context, state) {
           final carId = state.pathParameters['id'] ?? '';
           return BookingScreen(carId: carId);
+        },
+      ),
+      GoRoute(
+        path: '/booking/:id/payment',
+        builder: (context, state) {
+          final bookingId = state.pathParameters['id'] ?? '';
+          return PaymentScreen(bookingId: bookingId);
         },
       ),
       GoRoute(

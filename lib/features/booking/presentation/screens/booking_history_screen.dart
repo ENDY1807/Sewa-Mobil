@@ -229,6 +229,18 @@ class _BookingTabContent extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                     ],
+                    if (booking.paymentStatus != PaymentStatus.paid) ...[
+                      ElevatedButton(
+                        onPressed: () => context.push('/booking/${booking.id}/payment'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryLight,
+                          foregroundColor: Colors.white,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: Text(booking.paymentStatus == PaymentStatus.pending ? 'Bukti Bayar' : 'Bayar'),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                     OutlinedButton(
                       onPressed: () => context.push('/bookings/${booking.id}/receipt'),
                       child: const Text('Bukti Sewa'),

@@ -33,9 +33,14 @@ class AppRoutes {
   static const String adminAuditLogs = '/admin/audit-logs';
   static const String adminImporter = '/admin/importer';
 
+  static const String payment = '/booking/:id/payment';
+  static const String bookingReceipt = '/bookings/:id/receipt';
+
   // Helper helper to generate car detail path
   static String carDetailPath(String carId) => '/cars/$carId';
   static String bookingPath(String carId) => '/booking/$carId';
   static String bookingDetailPath(String bookingId) => '/bookings/$bookingId';
+  static String bookingReceiptPath(String bookingId) => '/bookings/$bookingId/receipt';
+  static String paymentPath(String bookingId) => '/booking/$bookingId/payment';
   static String adminCarEditPath(String carId) => '/admin/cars/$carId/edit';
 }

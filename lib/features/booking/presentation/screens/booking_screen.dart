@@ -110,8 +110,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
           backgroundColor: AppColors.success,
         ),
       );
-      // Navigate to booking receipt
-      context.go('/bookings/${booking.id}/receipt');
+      // Navigate to payment screen
+      context.go('/booking/${booking.id}/payment');
     } else {
       final errorState = ref.read(bookingControllerProvider);
       final errorMsg = errorState.hasError ? errorState.error.toString() : 'Gagal membuat pesanan.';

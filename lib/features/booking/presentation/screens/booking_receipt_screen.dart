@@ -195,6 +195,22 @@ class BookingReceiptScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                if (booking.paymentStatus != PaymentStatus.paid) ...[
+                  const SizedBox(height: AppSizes.p12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => context.go('/booking/${booking.id}/payment'),
+                      icon: const Icon(Icons.payment, size: 18),
+                      label: const Text('Lanjut ke Pembayaran / Bukti Transfer'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppSizes.p12),
                 SizedBox(
                   width: double.infinity,
