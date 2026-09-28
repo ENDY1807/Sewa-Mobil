@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/admin/presentation/admin_dashboard_screen.dart';
-import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/booking/presentation/booking_history_screen.dart';
 import '../../features/cars/presentation/catalog_screen.dart';
 import '../../features/favorites/presentation/favorites_screen.dart';
@@ -10,7 +12,7 @@ import '../../features/profile/presentation/profile_screen.dart';
 import '../../shared/widgets/error_state.dart';
 import 'route_names.dart';
 
-/// Centralized application router with route definitions and error handling.
+/// Centralized application router with route definitions, error handling, and redirection.
 class AppRouter {
   AppRouter._();
 
@@ -29,6 +31,14 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.register,
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: AppRoutes.bookingHistory,
